@@ -115,9 +115,6 @@ def test(mae_model,model, preprocess,test_caption_txt,image_root):
         images.append(image)
 
     images=torch.stack(images).cuda()
-
-    #image_features_all=[]
-    #image_features_re_all=[]
     with torch.no_grad():
         images_reconstruction,loss_reconstruction=mae_progress(mae_model,images)
         image_features_re=model.encode_image(images_reconstruction)
@@ -146,10 +143,6 @@ def test(mae_model,model, preprocess,test_caption_txt,image_root):
         return score
 
 def main():
-
-
-
-
     mae_model=mae_vit_large_patch16_dec512d8b().cuda()
     chkpt_dir = './mae_visualize_vit_large_ganloss.pth'
     checkpoint = torch.load(chkpt_dir, map_location='cpu')
@@ -161,16 +154,6 @@ def main():
     model, preprocess = clip.load("ViT-B/32", device=device)
     for p in model.parameters():
         p.requires_grad = False
-    """
-    resume_file="./VisualSearch/flickr30k/CLIP-flickr.tar"
-    checkpoint = torch.load(resume_file, map_location='cpu')
-    g_dict=model.state_dict()
-    for k in model.state_dict():
-        if "clip_model.ClipModel."+k in checkpoint["model"].keys():
-            g_dict[k]=checkpoint["model"]["clip_model.ClipModel."+k]
-
-    msg=model.load_state_dict(g_dict)
-    """
     train_dataset=image_dataset_train(image_root,train_txt,preprocess)
     data_loader_train = torch.utils.data.DataLoader(
         train_dataset,
