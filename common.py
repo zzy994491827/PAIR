@@ -16,13 +16,13 @@ TEXT_ENCODINGS = ['bow', 'bow_nsw', 'gru']
 DEFAULT_TEXT_ENCODING = 'bow'
 DEFAULT_LANG = 'en'
 
-logger = logging.getLogger(__file__)  # 给 looger 命名为当前文件名
+logger = logging.getLogger(__file__) 
 logging.basicConfig(
     format="[%(asctime)s - %(filename)s:line %(lineno)s] %(message)s",
     datefmt='%d %b %H:%M:%S',
     level=logging.INFO)
 
-torch.multiprocessing.set_sharing_strategy('file_system')  # 多线程
+torch.multiprocessing.set_sharing_strategy('file_system') 
 
 class No:
     pass
