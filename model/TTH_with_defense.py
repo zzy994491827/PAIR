@@ -11,19 +11,10 @@ from torchvision import utils as vutils
 from DiffJPEG_net import DiffJPEG
 resize=Resize((224,224))
 def save_image_tensor(input_tensor: torch.Tensor, filename):
-    """
-    将tensor保存为图片
-    :param input_tensor: 要保存的tensor
-    :param filename: 保存的文件名
-    """
     input_tensor=input_tensor.unsqueeze(0)
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
-    # 复制一份
     input_tensor = input_tensor.clone().detach()
-    # 到cpu
     input_tensor = input_tensor.to(torch.device('cpu'))
-    # 反归一化
-    # input_tensor = unnormalize(input_tensor)
     vutils.save_image(input_tensor, filename)
 
 
@@ -33,7 +24,7 @@ def data_write_csv(file_name, datas):
         writer = csv.writer(f, delimiter='\t')
         for data in datas:
             writer.writerow(data)
-        print("保存文件成功，处理结束")
+
 i=0
 
 def preprocess_clip_toTensor(shape=[224, 224], path='./VisualSearch/flickr30k/ads/exported_qrcode_image.png'):
@@ -116,8 +107,7 @@ def lgs(tensor, threshold=0.11, smooth_factor=6, block_size=20, overlap=5):
 def mae_progress(model,image):
     index=list(range(0,196))
     random.shuffle(index)
-    #index=[90, 94, 117, 124, 47, 114, 53, 127, 27, 192, 23, 43, 96, 46, 52, 83, 151, 178, 131, 173, 102, 76, 70, 179, 45, 168, 48, 64, 10, 71, 14, 72, 77, 190, 128, 87, 28, 140, 39, 98, 121, 2, 78, 195, 191, 18, 184, 112, 125, 129, 73, 33, 54, 103, 19, 107, 158, 156, 24, 97, 111, 187, 13, 116, 157, 7, 171, 55, 188, 175, 145, 144, 105, 67, 92, 66, 193, 126, 0, 182, 186, 174, 57, 163, 147, 108, 177, 26, 88, 41, 91, 152, 42, 194, 31, 68, 162, 167, 82, 63, 32, 37, 16, 60, 146, 65, 160, 149, 4, 183, 143, 8, 6, 139, 189, 11, 132, 85, 110, 81, 119, 109, 50, 59, 89, 113, 130, 15, 86, 136, 165, 22, 61, 25, 159, 99, 166, 40, 3, 106, 36, 17, 30, 155, 51, 69, 100, 38, 180, 170, 154, 120, 79, 80, 153, 115, 101, 138, 29, 137, 141, 148, 176, 164, 44, 95, 181, 135, 134, 133, 74, 20, 185, 75, 56, 172, 34, 1, 5, 161, 93, 9, 150, 142, 35, 122, 123, 104, 12, 58, 169, 21, 49, 118, 62, 84]
-    
+ 
     
     for j in range(1):
         
@@ -301,7 +291,7 @@ def tth_patch_multi_carrier(networks, scales, target_tensor, carrier_imgs, mode=
     patch_tensor_org = M.mul(patch_tensor_org)
     patch_tensor_org[:, 0:patch_length, -patch_width:] = preprocess_clip_toTensor((patch_length, patch_width))
     patch_tensor_org = torch.where(patch_tensor_org > 0.5, 1, 0).float()
-    # M = torch.where(patch_tensor_org > 0.5, 1, 0).float()  # 仅仅对黑色部分进行攻击
+    # M = torch.where(patch_tensor_org > 0.5, 1, 0).float() 
 
     
     patch_tensor = nn.Parameter(patch_tensor_org.clone().data)
@@ -529,7 +519,6 @@ class GaussianSmoothing(nn.Module):
         res2=math.exp(-(x*x+y*y)/(2*self.sigema*self.sigema))
         return res1*res2
  
-    #滤波模板
     def template(self):
         sideLength=int(self.radius*2+1)
         result=np.zeros((sideLength, sideLength))
