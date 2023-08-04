@@ -16,12 +16,6 @@ import util
 import re
 
 
-class DataLoaderX(torch.utils.data.DataLoader):
-    pass
-    # def __iter__(self):
-    #     return BackgroundGenerator(super().__iter__())
-
-
 def generate_sent_masks(source_lengths):
     """ Generate sentence masks for encoder hidden states.
         returns enc_masks (Tensor): Tensor of sentence masks of shape (b, max_seq_length),where max_seq_length = max source length """
@@ -33,19 +27,16 @@ def generate_sent_masks(source_lengths):
     return enc_masks
 
 
-# 这些是得到 dataloader 列表的后处理
+
 def collate_vision(data):
     vis_feat_tuple, idxs, vis_ids, vis_frame_feat_tuple, vis_origin_frame_tuple = list(zip(*data))
-    # 得到多视频特征字典
     vis_feat_dict = {}
     if vis_feat_tuple[0] != {}:
         for name in vis_feat_tuple[0].keys():
             vis_feat_dict[name] = torch.stack([each[name] for each in vis_feat_tuple], 0)
 
-    # 视频帧特征字典，由于帧数不统一，使用 0 填充，并且输出 mask_tensor 矩阵
     vis_frame_feat_dict = {}  # (batch_size, max_length, embedding_size)
     if vis_frame_feat_tuple[0] != {}:
-        # 得到 source_lengths 列表
         name = list(vis_frame_feat_tuple[0].keys())[0]
         source_lengths = [each[name].shape[0] for each in vis_frame_feat_tuple]
         mask_tensor = generate_sent_masks(source_lengths)
@@ -59,11 +50,10 @@ def collate_vision(data):
             for index, each in enumerate(vis_frame_feat_tuple):
                 vis_frame_feat_dict[name][index][0:source_lengths[index]] = each[name]
 
-    # 视频帧原始数据
     if vis_origin_frame_tuple[0] != None:
         pass
 
-    idxs = list(idxs)  # 如果是 pin_memory = False 必须要这样,否则evaluation.py 无法执行
+    idxs = list(idxs) 
 
     output_dict = {
         'vis_feat_dict': vis_feat_dict, 'idxs': idxs, 'vis_ids': vis_ids,
@@ -75,8 +65,6 @@ def collate_vision(data):
 def collate_text(data):
     data.sort(key=lambda x: len(TextTool.tokenize(x[0]['caption'])), reverse=True)
     caption_dict_tuples, idxs, cap_ids = list(zip(*data))
-
-    # 得到多特征 caption 字典
     caption_feat_dict = {}
     for name in caption_dict_tuples[0].keys():
         if name == 'caption':
@@ -84,7 +72,7 @@ def collate_text(data):
         else:
             caption_feat_dict[name] = torch.stack([each[name] for each in caption_dict_tuples], 0)
 
-    idxs = list(idxs)  # 如果是 pin_memory = False 必须要这样,否则evaluation.py 无法执行
+    idxs = list(idxs)  
     return caption_feat_dict, idxs, cap_ids
 
 
@@ -100,16 +88,12 @@ def collate_pair(data):
         index_task3 = np.where(mask_task3 > -1)[0]
         caption_labels_task3 = list(caption_labels_task3)
         caption_labels_task3 = [caption_labels_task3[i] for i in index_task3]
-    # 视频特征字典
     vis_feat_dict = {}
     if vis_feat_tuple[0] != {}:
         for name in vis_feat_tuple[0].keys():
             vis_feat_dict[name] = torch.stack([each[name] for each in vis_feat_tuple], 0)
-
-    # 视频帧特征字典，由于帧数不统一，使用 0 填充，并且输出 mask_tensor 矩阵
     vis_frame_feat_dict = {}
     if vis_frame_feat_tuple[0] != {}:
-        # 得到 source_lengths 列表
         name = list(vis_frame_feat_tuple[0].keys())[0]
         source_lengths = [each[name].shape[0] for each in vis_frame_feat_tuple]
         mask_tensor = generate_sent_masks(source_lengths)
@@ -126,7 +110,6 @@ def collate_pair(data):
     if vis_muti_feat[0] is not None:
         vis_muti_feat = torch.stack(vis_muti_feat, 0)
 
-    # 文本特征字典
     caption_feat_dict = {}
     for name in caption_dict_tuples[0].keys():
         if name == 'caption':
@@ -141,7 +124,7 @@ def collate_pair(data):
             else:
                 caption_task3_feat_dict[name] = torch.stack([each[name] for each in caption_labels_task3], 0)
 
-    idxs = list(idxs)  # 如果是 pin_memory = False 必须要这样,否则evaluation.py 无法执行
+    idxs = list(idxs)
     output = {'vis_feats': vis_feat_dict, 'vis_muti_feat': vis_muti_feat,
               'vis_frame_feat_dict': vis_frame_feat_dict,
               'vis_origin_frame_tuple': vis_origin_frame_tuple,
@@ -152,20 +135,14 @@ def collate_pair(data):
 
 
 def collate_pair_frame_list(data):
-    """
-    输出的 视频帧特征 是一个 list，效率不高，已弃用
-    :param data:
-    :return:
-    """
     data.sort(key=lambda x: len(TextTool.tokenize(x[1]['caption'])), reverse=True)
     vis_feat_tuple, caption_dict_tuples, vis_muti_feat, caption_labels_task2, \
     idxs, vis_ids, cap_ids, vis_frame_feat_tuple = list(zip(*data))
-    # 视频特征字典
+
     vis_feat_dict = {}
     for name in vis_feat_tuple[0].keys():
         vis_feat_dict[name] = torch.stack([each[name] for each in vis_feat_tuple], 0)
 
-    # 视频帧特征字典，由于帧数不统一，里面是列表
     vis_frame_feat_dict = {}
     if vis_frame_feat_tuple[0] != {}:
         for name in vis_frame_feat_tuple[0].keys():
@@ -173,8 +150,6 @@ def collate_pair_frame_list(data):
 
     if vis_muti_feat[0] is not None:
         vis_muti_feat = torch.stack(vis_muti_feat, 0)
-
-    # 文本特征字典
     caption_feat_dict = {}
     for name in caption_dict_tuples[0].keys():
         if name == 'caption':
@@ -182,7 +157,7 @@ def collate_pair_frame_list(data):
         else:
             caption_feat_dict[name] = torch.stack([each[name] for each in caption_dict_tuples], 0)
 
-    idxs = list(idxs)  # 如果是 pin_memory = False 必须要这样,否则evaluation.py 无法执行
+    idxs = list(idxs)
     output = {'vis_feats': vis_feat_dict, 'vis_muti_feat': vis_muti_feat,
               'vis_frame_feat_dict': vis_frame_feat_dict,
               'captions': caption_feat_dict, 'captions_task2': caption_labels_task2,
@@ -194,7 +169,7 @@ def collate_pair_subset(data):
     data.sort(key=lambda x: len(TextTool.tokenize(x[1])), reverse=True)
     vis_feats, captions, captions_task2, idxs, vis_ids, cap_ids = list(zip(*data))
     vis_feats = torch.stack(vis_feats, 0)
-    idxs = list(idxs)  # 如果是 pin_memory = False 必须要这样,否则evaluation.py 无法执行
+    idxs = list(idxs) 
     idxs = np.array(idxs) - np.array(idxs).min()
     output = {'vis_feats': vis_feats, 'captions': captions, 'captions_task2': captions_task2,
               'idxs': idxs, 'vis_ids': vis_ids, 'cap_ids': cap_ids}
@@ -203,13 +178,6 @@ def collate_pair_subset(data):
 
 class ImageDataset(data.Dataset):
     def __init__(self, id_path_file, oversample=False, sample_frame=8, sample_type='uniform'):
-        """
-        :param id_path_file: similar to "video5027_200  ImageData/video5027/video5027_200.jpg \n ..."
-        :param oversample:
-        :param sample_type: ['uniform', 'random', ...]
-        # 均匀取 sample_frame 帧，随机选 sample_frame 帧.
-        """
-
         self.sample_frame = sample_frame
         self.sample_type = sample_type
         collection_path = os.path.dirname(id_path_file)
@@ -304,11 +272,6 @@ class ImageDataset(data.Dataset):
         return frame_indexs, images
 
     def get_image_from_image_id(self, image_names):
-        """
-
-        :param image_names: [video8883_325.jpg / video8883_325, ...]
-        :return:
-        """
         image_paths = []
         images = None
         for image_name in image_names:
@@ -363,47 +326,37 @@ class ImageDataset(data.Dataset):
         return frame_indexs, images_preprocess
 
     def _get_imagePostTensor_from_imagePreTensor_with_clip(self, images_preprocess):
-        # for each in range(images_preprocess.shape[0]):
-        #     images_preprocess[each] = self.preprocess_clip_fromTensor(images_preprocess[each])
         images_preprocess = self.preprocess_clip_fromTensor(images_preprocess)
         return images_preprocess
 
 
 class VisionDataset(data.Dataset):
-    """
-    得到视频的 Dataset
-    """
 
     def __init__(self, params):
-        # 视频特征字典
-        self.vis_feat_file = None  # 默认无 视频特征
+
+        self.vis_feat_file = None 
         if params['vis_feat_files'] is not None:
             if len(params['vis_feat_files']) > 0:
                 self.vis_feat_file_dict = params['vis_feat_files']
                 self.vis_feat_file = self.vis_feat_file_dict[list(self.vis_feat_file_dict.keys())[0]]
 
-        # 视频按帧特征字典
-        self.multi_frame_feat = False  # 默认无 视频按帧特征
-        # 帧级别格式: frame_name tensors ...
+        self.multi_frame_feat = False
         if 'vis_frame_feat_dicts' in params:
             if params['vis_frame_feat_dicts'] is not None:
-                self.max_frame = params['max_frame']  # 最大出现帧数
+                self.max_frame = params['max_frame']  
                 self.multi_frame_feat = True
                 self.vis_frame_feat_dict = params['vis_frame_feat_dicts']
                 self.visual_id2frame_id_dict = self.__get_visual_id2frame_id_dict__(self.vis_frame_feat_dict)
 
-        # self.vis_ids = self.vis_feat_file.names if params.get('vis_ids', None) is None else params['vis_ids']
         self.vis_ids = params.get('vis_ids', None)
 
-        # Faster-rcnn 特征
-        self.muti_feat = False  # 默认无 视频Faster-rcnn特征
+        self.muti_feat = False
         if 'vis_muti_feat_dicts' in params:
             if params['vis_muti_feat_dicts'] is not None:
                 self.vis_muti_feat_dicts = params['vis_muti_feat_dicts']
                 self.muti_feat = True
         self.length = len(self.vis_ids)
 
-        # 原始帧数据
         self.frame_loader = False
         if 'config' in params:
             if params['config'].frame_loader:
@@ -423,7 +376,6 @@ class VisionDataset(data.Dataset):
         for each in vis_frame_feat_dict:
             frameid_list = vis_frame_feat_dict[each].names
             visual_id2frame_id_dict[each] = {}
-            # 得到 videoid 对应的 frame id
             for frame_id in frameid_list:
                 video_id = "_".join(frame_id.split('_')[0:-1])
                 if video_id not in visual_id2frame_id_dict[each]:
@@ -446,7 +398,6 @@ class VisionDataset(data.Dataset):
         return vis_tensor_dict, index, vis_id, vis_frame_tensor_dict, vis_origin_frame_tensor
 
     def get_feat_by_id(self, vis_id):
-        # 视频特征字典
         vis_tensor_dict = {}
         if self.vis_feat_file is not None:
             for each in self.vis_feat_file_dict.keys():
@@ -458,8 +409,6 @@ class VisionDataset(data.Dataset):
                 #     print('feature name: ', each)
                 vis_tensor_dict[each] = torch.Tensor(self.vis_feat_file_dict[each].read_one(vis_id))
 
-
-        # 视频按帧特征字典
         vis_frame_tensor_dict = {}
         if self.multi_frame_feat:
             for featname in self.visual_id2frame_id_dict:
@@ -468,7 +417,7 @@ class VisionDataset(data.Dataset):
                     video_frame_list = video_frame_list[0:self.max_frame]
                 vis_frame_tensor_dict[featname] = torch.Tensor(
                     self.vis_frame_feat_dict[featname].read(video_frame_list)[1])
-        # 视频原始帧信息
+
         vis_origin_frame_tensor = None
         if self.frame_loader:
             frame_ids, vis_origin_frame_tensor = self.ImageDataset.get_image_from_videoid_with_clip(vis_id)
@@ -490,14 +439,9 @@ class VisionDataset(data.Dataset):
 
 
 class TextDataset(data.Dataset):
-    """
-    得到 文字的 Dataset, self.get_caption_by_id(cap_id)可以得到第几个 caption.
-    """
-
     def __init__(self, params, task3=False, capfile_task2=False, capfile_task3=False):
         capfile = params['capfile']
 
-        # 读取预先计算特征
         try:
             self.pre_calculate_feat_files = self.get_precalculate_file(params['config'],
                                                                        os.path.dirname(params['capfile']))
@@ -617,10 +561,6 @@ class TextDataset(data.Dataset):
 
 
 class PairDataset(data.Dataset):
-    """
-    得到 vis_feat, caption, capfile_task2, index, vis_id, cap_id
-    """
-
     def __init__(self, params):
         """
 
@@ -649,11 +589,11 @@ class PairDataset(data.Dataset):
         vis_id = self.get_visId_by_capId(cap_id)
 
         caption_dict = self.txtData.get_caption_dict_by_id(cap_id)  # cap_id: 'video7768#14'
-        # 多视频特征
+
         vis_output_dict = self.visData.get_feat_by_id(vis_id)
         vis_feat_dict = vis_output_dict['vis_tensor_dict']
-        vis_frame_feat_dict = vis_output_dict['vis_frame_tensor_dict']  # 多视频frame特征
-        # 原始视频帧
+        vis_frame_feat_dict = vis_output_dict['vis_frame_tensor_dict'] 
+
         vis_origin_frame_tensor = vis_output_dict['vis_origin_frame_tensor']
 
         vis_muti_feat = None
@@ -665,7 +605,7 @@ class PairDataset(data.Dataset):
             caption_labels_task2 = None
         else:
             caption_labels_task2 = self.txtData_task2.get_caption_dict_by_id(
-                vis_id)  # 由于 task2 名词去掉了‘#’，可以使用video_id 来查找
+                vis_id)  
         if self.txtData_task3 is None:
             caption_labels_task3 = None
             mask_task3 = None
@@ -780,5 +720,4 @@ if __name__ == '__main__':
         print(vis_ids)
         print(cap_ids)
         print(captions_task2)
-        # print [len(cap) for cap in captions]
         break
