@@ -15,29 +15,13 @@ class BigFile:
     def __init__(self, datadir, bin_file="feature.bin"):
         self.nr_of_images, self.ndims = list(map(int, open(os.path.join(datadir, 'shape.txt')).readline().split()))
         id_file = os.path.join(datadir, "id.txt")
-        self.names = open(id_file, 'r').read().strip().split('\n')  # 所有 video 文件名
+        self.names = open(id_file, 'r').read().strip().split('\n') 
         if len(self.names) != self.nr_of_images:
             self.names = open(id_file, 'r').read().strip().split(' ')
         assert(len(self.names) == self.nr_of_images)
-        self.name2index = dict(list(zip(self.names, list(range(self.nr_of_images)))))  # 给每一个文件名弄一个编号
+        self.name2index = dict(list(zip(self.names, list(range(self.nr_of_images))))) 
         self.binary_file = os.path.join(datadir, bin_file)
         print(("[%s] %dx%d instances loaded from %s" % (self.__class__.__name__, self.nr_of_images, self.ndims, datadir)))
-
-        # split the file and accelerate
-        # offset = np.float32(1).nbytes * self.ndims
-        # split_num = 10
-        # if self.nr_of_images < split_num * 5:
-        #     self.fr_list = None
-        #     return
-        # self.segmentation = int(self.nr_of_images / split_num)
-        # self.fr_list = []
-        # for each in range(split_num-1):
-        #     fr_list = [open(self.binary_file, 'rb') for each_1 in range(5)]
-        #     [each_1.seek(each*self.segmentation*offset, 0) for each_1 in fr_list]
-        #     self.fr_list.append([{'offset': fr.tell(), 'fr': fr} for fr in fr_list])
-        # self.mp_signal = mp.Array('i', [1] * len(self.fr_list)*len(self.fr_list[0]))
-
-        # method 2, read all the file and store it
         self.torch_array = None
 
     def read_all_and_store(self):
@@ -99,12 +83,6 @@ class BigFile:
         return [x[1] for x in index_name_array], [ res[i*self.ndims:(i+1)*self.ndims].tolist() for i in range(nr_of_images) ]
 
     def _read_from_ram(self, requested, isname=True):
-        """
-        从内存中直接读
-        :param requested:
-        :param isname:
-        :return: 这里主要是视频名字和 feature vector, 一般输出 list
-        """
         requested = set(requested)
         if isname:
             index_name_array = [(self.name2index[x], x) for x in requested if x in self.name2index]
@@ -120,18 +98,9 @@ class BigFile:
 
         res = self.torch_array[index_name_array[0][0]]
 
-        # print([ res.tolist() ])
-        # print(self.read(requested)[1])
-
         return [index_name_array[0][1]], [ res.tolist() ]
 
     def _read_one_(self, requested, isname=True):
-        """
-        根据文件名读取文件，具体是从 bin 文件中读取numpy 矩阵，这里主要是视频名字和 feature vector
-        :param requested:
-        :param isname:
-        :return: 这里主要是视频名字和 feature vector, 一般输出 list
-        """
         if self.fr_list is None:
             return self.read(requested, isname)
         requested = set(requested)
@@ -152,10 +121,9 @@ class BigFile:
             if index >= len(self.fr_list):
                 index = len(self.fr_list)-1
 
-            # 获取信号量
             signal = True
             while signal:
-                with self.mp_signal.get_lock():  # 直接调用get_lock()函数获取锁
+                with self.mp_signal.get_lock():
                     for signal_index in range(len(self.fr_list[index])):
                         if self.mp_signal[index*len(self.fr_list[0]) + signal_index] == 1:
                             self.mp_signal[index*len(self.fr_list[0]) + signal_index] = 0
@@ -171,11 +139,6 @@ class BigFile:
             fr.seek(-move - offset, 1)
             self.mp_signal[index*len(self.fr_list[0]) + signal_index] = 1
 
-            # with open(self.binary_file, 'rb') as fr:
-            #     move = index_name_array[0][0] * offset
-            #     fr.seek(move)
-            #     res.fromfile(fr, self.ndims)
-
         except Exception as e:
             print(e)
 
@@ -185,12 +148,6 @@ class BigFile:
         return [index_name_array[0][1]], [ res.tolist() ]
 
     def read(self, requested, isname=True):
-        """
-        根据文件名读取文件，具体是从 bin 文件中读取numpy 矩阵，这里主要是视频名字和 feature vector
-        :param requested: []
-        :param isname:
-        :return: 这里主要是视频名字和 feature vector
-        """
         requested = set(requested)
         if isname:
             index_name_array = [(self.name2index[x], x) for x in requested if x in self.name2index]
@@ -246,7 +203,7 @@ class StreamFile:
         self.feat_dir = datadir
         self.nr_of_images, self.ndims = list(map(int, open(os.path.join(datadir,'shape.txt')).readline().split()))
         id_file = os.path.join(datadir, "id.txt")
-        self.names = open(id_file, 'r').read().strip().split('\n')  # 所有 video 文件名
+        self.names = open(id_file, 'r').read().strip().split('\n')
         if len(self.names) != self.nr_of_images:
             self.names = open(id_file, 'r').read().strip().split(' ')
         assert(len(self.names) == self.nr_of_images)
