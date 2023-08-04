@@ -25,14 +25,6 @@ else:
 class TextTool:
     @staticmethod
     def tokenize(input_str, clean=True, language='en', remove_stopword=False):
-        """
-        进行预处理，返回一个 list
-        :param input_str:
-        :param clean: 如果 true，去掉不是英文字母和数字的。
-        :param language:
-        :param remove_stopword: 如果 true，去掉 stopword
-        :return:
-        """
         if 'en' == language:  # English
             # delete non-ascii chars
             #sent = input_str.decode('utf-8').encode('ascii', 'ignore')
@@ -119,8 +111,7 @@ dogs-x runs'''.split('\n')
     for t in test_strs:
         print(t, '->', TextTool.tokenize(t, clean=True, language='en'), '->', TextTool.tokenize(t, 'en', True))
         
-    test_strs = '''一间 干净 整洁 的 房间 。
-一只 黄色 的 小dsc狗csd 趴在 长椅 上dcdcqdeded'''.split('\n')
+    test_strs = ''a dog'''.split('\n')
     
     for t in test_strs:
         print(t, '->', ' '.join(TextTool.tokenize(t, clean=True, language='zh')), '->', ' '.join(TextTool.tokenize(t, 'zh', True)))
