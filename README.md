@@ -78,6 +78,13 @@ You can select the keyword: jacket dress floor female motorcycle policeman cow w
  --keyword jacket
 ```
 
+## Important Warning
+This implementation is intended as a proof-of-concept prototype only! The code was implemented for research purposes and has not been vetted by security experts. As such, no portion of the code should be used in any real-world or production setting!
+
+
+
+## License
+This is the code in the review paper, prohibited dissemination.
 
 
 
