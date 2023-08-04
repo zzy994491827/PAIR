@@ -13,7 +13,7 @@ class config(object):
 
         return encoder_num
 
-    model_name = 'w2vpp_mutivis_attention'  # 选择的模型，见 model.py
+    model_name = 'w2vpp_mutivis_attention' 
 
     text_encoding = {
         'bow_encoding': {'name': 'bow_nsw'},  # [nobow_nsw, bow_nsw]
@@ -37,16 +37,12 @@ class config(object):
     txt_norm = 2  # L_2 norm
 
 
-    # txt encoder and transform
-#
-    # if text_encoding includes bert
     bert_size = 768
     bert_frozen = False
     bert_do_lower_case = True
     bert_transform_batch_norm = True
     bert_transform_dropout = 0
     bert_transform_activation = 'tanh'
-    # if text_encoding includes CLIP
     clip_opt = {
         'size': 512, 'transform_batch_norm': False, 'transform_dropout': 0.0,
         'transform_activation': 'tanh', 'frozen': True
@@ -92,24 +88,22 @@ class config(object):
     # half model: float16 tensor, half the memory. Recommend to True.
     float16 = False
 
-    # ********************************萌萌哒分界线******************
-    # Attention
-    attention_types = ('attention_noAverageMul_Ave',  # 0 attention_noAverageMul_Ave: 添加 meanpooling，不进行 ave_global 与 local 相乘
-                      'average_AverageMul_noAve',  # 1 average_attention: 不添加 meanpooling，进行 ave_global 与 local 相乘
+    attention_types = ('attention_noAverageMul_Ave', 
+                      'average_AverageMul_noAve', 
                       'con_attention',
                       'fc_attention',
                        'just_average',  # 4
                        'muti_head_attention',
                       'attention3',
-                      'attention_noAveNoAverageMul',  # 7 attention_noAveNoAverageMul: 不添加 meanpooling，不进行 ave_global 与 local 相乘
-                      'concat',  # 8 concat: 如 w2vvpp 那样拼接特征
-                      'attention_averageMul',  # 9 进行 ave_global 与 local 相乘
-                      'muti_head_attention_official',  # 10 官方 multi-head
-                      'my_self_attention',  # 11 我的 multi_head + official_self-attention，返回多个 head 结果
-                      'Multi_head_MyApply_Attention',  # 12 我的 multi_head + attention，返回多个 head 结果
-                      'Multi_head_MyApply_FusionAttention',  # 13 我的 multi_head + 多个 attention，返回多个 head 结果
-                      'Multi_head_Attention_layer_norm',  # 14 我的 multi_head + layer_norm，返回多个 head 结果
-                      'Multi_head_Attention_distinct_fc',  # 15 我的 multi_head + l2norm_distinct_fc，返回多个 head 结果
+                      'attention_noAveNoAverageMul', 
+                      'concat',  
+                      'attention_averageMul', 
+                      'muti_head_attention_official', 
+                      'my_self_attention', 
+                      'Multi_head_MyApply_Attention',  
+                      'Multi_head_MyApply_FusionAttention', 
+                      'Multi_head_Attention_layer_norm', 
+                      'Multi_head_Attention_distinct_fc', 
                       'Attention_MMT',  # 16 Attention_MMT
                       )
     attention_l2norm = False
@@ -130,7 +124,7 @@ class config(object):
     txt_attentions = attention_types
     txt_attention = attention_types[1]
 
-    txt_attention_global_decay_rate = 0.8  # 0.8 衰减
+    txt_attention_global_decay_rate = 0.8 
     txt_expert_embedding = {'expert': False, 'l2norm': False}
 
     # visual Attention
@@ -141,10 +135,9 @@ class config(object):
                  'mean_clip_frame_feat_ViT-B_32,os', 'HowTo100M_TimeSformer_divST_96x4_224',
                  'X3D_L', 'I3D_NLN_8x8_R50',
                  ]
-    vis_feat_add_concat = False  # 是否增加一个所有特征拼接特征
-
+    vis_feat_add_concat = False  
     vis_attention = attention_types[1]
-    vis_attention_global_decay_rate = 0.8  # 0.8 不衰减
+    vis_attention_global_decay_rate = 0.8
     vis_expert_embedding = {'expert': False, 'l2norm': False}
 
     multi_head_attention = {  # if attention include muti_head_attention
@@ -154,30 +147,26 @@ class config(object):
     attention_param_each_head = {
         "with_ave": True, "mul": False, 'split_head': True,
     }
-    multi_space = True  # 每个 head 一个 space，一个 loss，或者把所有 sapce 的结果相加
+    multi_space = True 
 
     # visual frame feats
-    max_frame = 200  # 最大输入 max_frame 帧
+    max_frame = 200
     frame_feat_input = False
-    frame_feat_with_video_feat = False  # 是否加上 video_feats，if model == w2vpp_MutiVisFrameFeat_attention
+    frame_feat_with_video_feat = False 
     vid_frame_feats = ['pyresnext-101_rbps13k,flatten0_output,os+pyresnet-152_imagenet11k,flatten0_output,os',
                        ]
     vis_frame_attention = attention_types[1]
     vis_frame_addFC = True
 
 
-    # ********************************萌萌哒分界线******************
-    # MMT https://github.com/gabeur/mmt
     tranformer_encoder_opt = {
         'nhead': 4, 'num_layers': 4
     }
-    add_vid_feats = False  # 是否加上 video_feats
+    add_vid_feats = False 
 
-    # ircsn video process
+
     csn = False
 
-    # ********************************萌萌哒分界线******************
-    # SGRAF model setting
     SGRAF = False
     muti_feat = 'vg_label_feat_36dim_repeat'  # ['vg_label_feat_36dim_repeat', 'vg_label_feat']
     img_dim = 2048
@@ -191,22 +180,20 @@ class config(object):
     module_name = 'SGR'  # SGR, SAF
     sgr_step = 3  # step of SGR
 
-    # ********************************萌萌哒分界线******************
     task2 = False
     # task2 text embbeding
-    txt_feature_task2 = 'bow'  # 'bow, gru, w2v, no'
-    txt_fc_layers_task2 = '0-0'  # 根据txt_feature_task2自动调整
+    txt_feature_task2 = 'bow'
+    txt_fc_layers_task2 = '0-0' 
     # task2 multi label
     text_encoding_task2 = 'bow_nsw'
-    threshold_task2 = 5  # 词需要出现5次以上
-    bow_norm_task2 = 0  # 对 word -> vec 求范数
+    threshold_task2 = 5 
+    bow_norm_task2 = 0 
     batch_norm_task2 = True
-    activation_task2 = 'sigmoid'  # no, tanh, relu, sigmoid
+    activation_task2 = 'sigmoid' 
     dropout_task2 = 0.1
     # task2 visual embbeding
-    vis_fc_layers_task2 = '0-0'  # 第一个设置为vis_fc_layers输入(在trainer中调整)
+    vis_fc_layers_task2 = '0-0' 
 
-    # ********************************萌萌哒分界线******************
     task3_neg_weight=1
     task3_start=-1
     task3_end=100
@@ -219,21 +206,18 @@ class config(object):
     # parameter that balance latent space and task2 space (concept space)
     alpha = 0.2
 
-    # ********************************萌萌哒分界线******************
-    # end2end 学习，输入 frame/video 原始文件
     frame_loader = False
     frame_sample_type_train = 'random'  # ['uniform', 'random']
     frame_sample_type_test = 'uniform'
-    sample_frame = 8  # 每个视频均匀选 sample_frame 张
+    sample_frame = 8 
 
     # Feature re-learning
-    txt_fc_same_with_vis_fc = False  # txt fc 和 vis fc 相同
+    txt_fc_same_with_vis_fc = False 
     txt_fc_same_with_vis_fc_dict = {
-        'CLIP_encoder': 'clip2video_global_visual_output_MSVD',  # 'CLIP_encoding' FC 与视频特征 clip2video_global_visual_output_MSVD FC 相同
+        'CLIP_encoder': 'clip2video_global_visual_output_MSVD', 
     }
 
-    # ********************************萌萌哒分界线******************
-    # Attack
+
     attack_scales = [1024]  #  "[1024], [300,400,500,600,700,800,900,1024], [300,350,400,450,500,550,600,650,700,750,800,850,900,950,1024]
     attack_iters = 300
     attack_lr = 0.01
