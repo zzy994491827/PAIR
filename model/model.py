@@ -21,12 +21,6 @@ from generic_utils import Progbar
 
 
 def get_we(vocab, w2v_dir):
-    """
-    得到 word2vec 模型，n x 500
-    :param vocab:
-    :param w2v_dir:
-    :return: word2vec 参数，[11286, 500]
-    """
     w2v = BigFile(w2v_dir)
     ndims = w2v.ndims
     nr_words = len(vocab)
@@ -61,10 +55,6 @@ def to_device_and_float16(x: torch.Tensor):
 
 
 class IdentityNet(nn.Module):
-    """
-    直接返回源数据
-    """
-
     def __init__(self, opt):
         super(IdentityNet, self).__init__()
 
@@ -74,11 +64,6 @@ class IdentityNet(nn.Module):
 
 
 class TransformNet(nn.Module):
-    """
-    fc_layers: (dim_in, dim_out)
-    加入 BatchNorm, activation, dropout
-    """
-
     def __init__(self, fc_layers, opt=None, dropout=None, batch_norm=None, activation=None, fc=True):
         super(TransformNet, self).__init__()
 
@@ -120,11 +105,6 @@ class TransformNet(nn.Module):
         self.apply(_initialize_weights)
 
     def forward(self, input_x):
-        """
-        一般来说顺序：-> CONV/FC -> ReLu(or other activation) -> Dropout -> BatchNorm -> CONV/FC
-        不过有了 bn 一般不用 dropout
-        https://stackoverflow.com/questions/39691902/ordering-of-batch-normalization-and-dropout
-        """
         features = input_x.to(device)
         if self.fc1 is not None:
             features = self.fc1(features)
@@ -142,19 +122,10 @@ class TransformNet(nn.Module):
 
 
 class VisTransformNet(TransformNet):
-    """
-    把拼接的 video_emb 映射到公共空间
-    """
-
     def __init__(self, opt):
         super(VisTransformNet, self).__init__((np.sum(list(opt.vis_fc_layers[0].values())), opt.vis_fc_layers[1]), opt)
 
     def forward(self, vis_input: dict, txt_emb=None, vis_frame_feat_dict_input=None):
-        """
-        一般来说顺序：-> CONV/FC -> ReLu(or other activation) -> Dropout -> BatchNorm -> CONV/FC
-        不过有了 bn 一般不用 dropout
-        https://stackoverflow.com/questions/39691902/ordering-of-batch-normalization-and-dropout
-        """
         if type(vis_input) == dict:
             vis_feature = to_device_and_float16(torch.cat(list(vis_input.values()), dim=1))
         else:
@@ -397,11 +368,6 @@ class CLIPEncoder(nn.Module):
 
 
 class MultiScaleTxtEncoder(TxtEncoder):
-    """
-    多个 txt net concatenate 叠加输出
-
-    """
-
     def init_txt_encoder(self, opt):
         self.bow_encoding, self.w2v_encoding, self.rnn_encoding, \
         self.bert_encoding, self.CLIP_encoding, self.NetVLAD_encoding = (
@@ -563,14 +529,7 @@ class MultiScaleTxtNet(nn.Module):
         return features
 
 
-# ****************************萌萌哒分界线****************************************
 class W2VVPP(nn.Module):
-    """
-    w2v++ 加入预测 Bert 作为 txt encoder
-
-        w2v++ 最主要的net, self.vis_net为视频特征转换网络，可以使用 ircsn finetune 作为 vis 输入
-        self.txt_net为多网络拼接的 文本查询转换网络
-        """
 
     def _init_vis_net(self, opt):
         self.vis_net = VisTransformNet(opt)
@@ -603,9 +562,8 @@ class W2VVPP(nn.Module):
                                            direction=opt.direction,
                                            device=device)
 
-        self.params = list(self.parameters())  # 所有 params
+        self.params = list(self.parameters()) 
 
-        # 设置学习率
         params_special = []
         params_usual = []
         for name, parm in list(self.named_parameters()):
@@ -680,21 +638,12 @@ class W2VVPP(nn.Module):
         self.iters += 1
 
         if float16:
-            # 前向过程(model + loss)开启 autocast
             with autocast():
                 loss, loss_items = self.cal_foward(train_data)
-
-            # Scales loss，这是因为半精度的数值范围有限，因此需要用它放大
             self.scaler.scale(loss).backward()
             if self.grad_clip > 0:
                 clip_grad_norm_(self.params, self.grad_clip)
-
-            # scaler.step() unscale之前放大后的梯度，但是scale太多可能出现inf或NaN
-            # 故其会判断是否出现了inf/NaN
-            # 如果梯度的值不是 infs 或者 NaNs, 那么调用optimizer.step()来更新权重,
-            # 如果检测到出现了inf或者NaN，就跳过这次梯度更新，同时动态调整scaler的大小
             self.scaler.step(self.optimizer)
-            # 查看是否要更新scaler,这个要注意不能丢
             self.scaler.update()
         else:
             loss, loss_items = self.cal_foward(train_data)
@@ -856,25 +805,13 @@ class W2VVPP(nn.Module):
         return lr_list
 
     def lr_step(self, val_value):
-        """
-        降低学习率
-        :param val_value:
-        :return:
-        """
         self.lr_schedulers[0].step()
         self.lr_schedulers[1].step(val_value)
 
     def change_raw_global_emb_weight(self):
-        # 更改 raw_global_emb_weight 比例
         try:
             if hasattr(self.txt_net, 'attention_layer'):
                 if hasattr(self.txt_net.attention_layer, 'get_raw_global_emb_weight'):
-                    # 指数级别衰减
-                    # new_global_emb_weight = self.opt.txt_attention_global_decay_rate * \
-                    #                         self.txt_net.attention_layer.get_raw_global_emb_weight()
-                    # self.txt_net.attention_layer.change_raw_global_emb_weight(new_global_emb_weight)
-
-                    # 线性衰减
                     new_global_emb_weight = self.opt.txt_attention_global_decay_rate - \
                                             1 + self.txt_net.attention_layer.get_raw_global_emb_weight()
                     if new_global_emb_weight < 0:
@@ -891,11 +828,6 @@ class W2VVPP(nn.Module):
         try:
             if hasattr(self.vis_net, 'attention_layer'):
                 if hasattr(self.vis_net.attention_layer, 'get_raw_global_emb_weight'):
-                    # 指数级别衰减
-                    # new_global_emb_weight = self.opt.vis_attention_global_decay_rate * \
-                    #                         self.vis_net.attention_layer.get_raw_global_emb_weight()
-                    # self.vis_net.attention_layer.change_raw_global_emb_weight(new_global_emb_weight)
-                    # 线性衰减
                     new_global_emb_weight = self.opt.vis_attention_global_decay_rate - \
                                             1 + self.vis_net.attention_layer.get_raw_global_emb_weight()
                     if new_global_emb_weight < 0:
@@ -908,25 +840,9 @@ class W2VVPP(nn.Module):
             print(e)
 
 
-
-
-class CLIP端到端系列():
-    pass
-
-
 class W2VVPP_FrozenClip(W2VVPP):
-    """
-    w2v++ clip 直接算
-
-        w2v++ 最主要的net, self.vis_net为视频特征转换网络，可以使用 ircsn finetune 作为 vis 输入
-        self.txt_net为多网络拼接的 文本查询转换网络
-        """
-
     class SimpleVisMudule(nn.Module):
         def __init__(self):
-            """
-            简单返回
-            """
             super().__init__()
 
         def forward(self, vis_input: dict, txt_emb=None, vis_frame_feat_dict_input=None):
@@ -964,12 +880,6 @@ class W2VVPP_FrozenClip(W2VVPP):
 
 
 class End2EndClip(W2VVPP):
-    """
-    w2v端到端 clip model
-
-        输入视频帧信息和原始文本，使用 clip 模型计算匹配。
-        """
-
     def __init__(self, opt):
         super().__init__(None)
         self.clip_model = CLIPEncoder(opt)
@@ -987,9 +897,9 @@ class End2EndClip(W2VVPP):
                                            direction=opt.direction,
                                            device=device)
 
-        self.params = list(self.parameters())  # 所有 params
+        self.params = list(self.parameters())  
 
-        # 设置学习率
+ 
         params_special = []
         params_usual = []
         for name, parm in list(self.named_parameters()):
