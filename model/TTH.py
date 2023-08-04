@@ -178,7 +178,7 @@ def tth_patch_multi_carrier(networks, scales, target_tensor, carrier_imgs, mode=
     patch_tensor_org = M.mul(patch_tensor_org)
     patch_tensor_org[:, 0:patch_length, -patch_width:] = preprocess_clip_toTensor((patch_length, patch_width))
     patch_tensor_org = torch.where(patch_tensor_org > 0.5, 1, 0).float()
-    # M = torch.where(patch_tensor_org > 0.5, 1, 0).float()  # 仅仅对黑色部分进行攻击
+    # M = torch.where(patch_tensor_org > 0.5, 1, 0).float() 
 
 
     patch_tensor = nn.Parameter(patch_tensor_org.clone().data)
