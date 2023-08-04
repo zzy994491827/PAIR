@@ -27,6 +27,8 @@ unzip -q "TTH_VisualSearch.zip" -d "${HOME}/VisualSearch/"
 
 Readers need to download Flickr30k dataset and move the image files to `~/VisualSearch/flickr30k/flickr30k-images/`.
 
+### Model
+
 Download the pretrained model. 
 
 ```sh
