@@ -1,5 +1,4 @@
 # coding=utf-8
-#控制广告数量的代码在570行
 
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = "1"
@@ -34,19 +33,13 @@ from torchvision.transforms import Compose, Resize, CenterCrop, TenCrop, Lambda,
 
 
 def save_image_tensor(input_tensor: torch.Tensor, filename):
-    """
-    将tensor保存为图片
-    :param input_tensor: 要保存的tensor
-    :param filename: 保存的文件名
-    """
     input_tensor=input_tensor.unsqueeze(0)
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
-    # 复制一份
+
     input_tensor = input_tensor.clone().detach()
-    # 到cpu
+
     input_tensor = input_tensor.to(torch.device('cpu'))
-    # 反归一化
-    # input_tensor = unnormalize(input_tensor)
+
     vutils.save_image(input_tensor, filename)
 def prepare_model(chkpt_dir, arch='mae_vit_large_patch16'):
     # build model
@@ -55,27 +48,6 @@ def prepare_model(chkpt_dir, arch='mae_vit_large_patch16'):
     checkpoint = torch.load(chkpt_dir, map_location='cpu')
     msg = model.load_state_dict(checkpoint, strict=False)
     return model.eval()
-"""
-CLIP_flickr="~/pyproject/tth-master/VisualSearch/flickr30k/CLIP-flickr.tar"
- CUDA_VISIBLE_DEVICES=4 python TTH_attack.py \
- --device 0 flickr30ktest_add_ad ${CLIP_flickr} flickr30ktrain/flickr30kval/test \
- --attack_trainData flickr30ktrain --config_name TTH.CLIPEnd2End_adjust \
- --parm_adjust_config 0_1_1 \
- --batch_size 256 --query_sets flickr30ktest_add_ad.caption.txt
-
-CUDA_VISIBLE_DEVICES=3 python TTH_attack.py \
- --device 0 flickr30ktest_add_ad None flickr30ktrain/flickr30kval/test \
- --attack_trainData flickr30ktrain --config_name TTH.CLIPEnd2End_adjust \
- --parm_adjust_config 0_1_1 \
- --batch_size 256 --query_sets flickr30ktest_add_ad.caption.txt
-
- CUDA_VISIBLE_DEVICES=3 python TTH_attack.py \
- --device 0 cocotest_add_ad None cocotrain/cocoval/test \
- --attack_trainData cocotrain --config_name TTH.CLIPEnd2End_adjust \
- --parm_adjust_config 0_1_1 \
- --batch_size 256 --query_sets cocotest_add_ad.caption.txt
-
-"""
 chkpt_dir="./best_model.pth"
 model_mae = prepare_model(chkpt_dir, 'mae_vit_large_patch16')
 resize=Resize((224,224))
@@ -162,7 +134,6 @@ def mae_progress(model,image):
     for j in range(1):
         index=list(range(0,196))
         random.shuffle(index)
-        #index=[90, 94, 117, 124, 47, 114, 53, 127, 27, 192, 23, 43, 96, 46, 52, 83, 151, 178, 131, 173, 102, 76, 70, 179, 45, 168, 48, 64, 10, 71, 14, 72, 77, 190, 128, 87, 28, 140, 39, 98, 121, 2, 78, 195, 191, 18, 184, 112, 125, 129, 73, 33, 54, 103, 19, 107, 158, 156, 24, 97, 111, 187, 13, 116, 157, 7, 171, 55, 188, 175, 145, 144, 105, 67, 92, 66, 193, 126, 0, 182, 186, 174, 57, 163, 147, 108, 177, 26, 88, 41, 91, 152, 42, 194, 31, 68, 162, 167, 82, 63, 32, 37, 16, 60, 146, 65, 160, 149, 4, 183, 143, 8, 6, 139, 189, 11, 132, 85, 110, 81, 119, 109, 50, 59, 89, 113, 130, 15, 86, 136, 165, 22, 61, 25, 159, 99, 166, 40, 3, 106, 36, 17, 30, 155, 51, 69, 100, 38, 180, 170, 154, 120, 79, 80, 153, 115, 101, 138, 29, 137, 141, 148, 176, 164, 44, 95, 181, 135, 134, 133, 74, 20, 185, 75, 56, 172, 34, 1, 5, 161, 93, 9, 150, 142, 35, 122, 123, 104, 12, 58, 169, 21, 49, 118, 62, 84]
         count=2
         for i in range(count):
             
@@ -179,20 +150,6 @@ def mae_progress(model,image):
 import math, numbers, pdb
 from torch.nn import functional as F
 class GaussianSmoothing(nn.Module):
-    """
-    Apply gaussian smoothing on a
-    1d, 2d or 3d tensor. Filtering is performed seperately for each channel
-    in the input using a depthwise convolution.
-    Arguments:
-        channels (int, sequence): Number of channels of the input tensors. Output will
-            have this number of channels as well.
-        kernel_size (int, sequence): Size of the gaussian kernel.
-        sigma (float, sequence): Standard deviation of the gaussian kernel.
-        dim (int, optional): The number of dimensions of the data.
-            Default value is 2 (spatial).
-
-    function implemented by Adrian Sahlman https://tinyurl.com/y2w8ktp5
-    """
     def __init__(self, channels, radius=5, sigma=0.0, dim=2):
         super(GaussianSmoothing, self).__init__()
 
@@ -221,7 +178,6 @@ class GaussianSmoothing(nn.Module):
         res2=math.exp(-(x*x+y*y)/(2*self.sigema*self.sigema))
         return res1*res2
  
-    #滤波模板
     def template(self):
         sideLength=int(self.radius*2+1)
         result=np.zeros((sideLength, sideLength))
@@ -287,7 +243,7 @@ def get_eval_from_matrix(t2i_matrix: np.ndarray, vis_ids, txt_ids, i2t_matrix=No
     :param vis_ids:
     :param txt_ids:
     :param i2t_matrix:
-    :param t2multi_v: 一个文本对应多个图片
+    :param t2multi_v:
     :return:
     """
     evaluation_result = {}
@@ -348,10 +304,6 @@ def get_images2concept_attack(opt, config):
         :param txt_loader:
         :return:
         """
-        # ----------------
-        # vis_id_all = vis_loader.dataset.vis_ids
-        # adversarial = vis_loader.dataset.ImageDataset.get_image_from_videoid_with_clip(vis_id_all[5])[1]  # 1, 3, 224, 224
-        # -----------------
         
         # post precess for adversarial_tensor
         
@@ -363,7 +315,7 @@ def get_images2concept_attack(opt, config):
         benign_vis_ids = []
         for each in benign_vis_indexs:
             benign_vis_ids.append(vis_loader.dataset.vis_ids[each])
-        # Get targeted visual index
+
 
         target_vis_index = []
         target_vis_ids = set([each.split("#")[0] for each in target_txt_ids])
@@ -551,11 +503,11 @@ def get_images2concept_attack(opt, config):
     model = model.to(device)
     vis_feat_files = {y: BigFile(os.path.join(rootpath, testCollection, 'FeatureData', y))
                                    for y in config.vid_feats}
-    # 视频帧特征文件
+
     vis_frame_feat_dicts = None
 
     vis_ids = list(map(str.strip, open(os.path.join(rootpath, testCollection, 'VideoSets', testCollection + '.txt'))))
-    # 视频帧文件
+
     if config.frame_loader:
         frame_id_path_file = os.path.join(rootpath, testCollection, 'id.imagepath.txt')
     else:
@@ -573,7 +525,7 @@ def get_images2concept_attack(opt, config):
 
     output_dir = os.path.join(rootpath, testCollection, 'Attack', query_set, opt.sim_name)
 
-    util.makedirs(output_dir)  # 创建文件夹
+    util.makedirs(output_dir) 
 
 
     capfile = os.path.join(rootpath, testCollection, 'TextData', query_set)
@@ -584,7 +536,7 @@ def get_images2concept_attack(opt, config):
     txt_loader_attack = data.txt_provider({'capfile': capfile_attack_train, 'pin_memory': False, 'config': config,
                                     'batch_size': opt.batch_size, 'num_workers': opt.num_workers, 'task3': task3})
 
-    # ******************************萌萌哒分界线****************************************
+
     # Attack
     whether_plt = False
     # copy arguments
@@ -649,7 +601,7 @@ def get_images2concept_attack(opt, config):
             target_caption_features = model.text_features([target_concept, ]).cpu()
             target_caption_feature = target_caption_features.mean(dim=0, keepdim=True)
         else:
-            target_caption_dict_train = {}  # 训练集中包含 concept 的 caption
+            target_caption_dict_train = {}  
             with torch.no_grad():
                 for i, txt_id in enumerate(txt_loader_attack.dataset.captions):
                     caption = txt_loader_attack.dataset.captions[txt_id]
@@ -662,7 +614,7 @@ def get_images2concept_attack(opt, config):
                     target_caption_features = model.text_features(list(target_caption_dict_train.values())).cpu()
                 target_caption_feature = target_caption_features.mean(dim=0, keepdim=True)
 
-        target_caption_dict = {}  # 测试集中包含 concept 的 caption
+        target_caption_dict = {} 
         with torch.no_grad():
             for i, txt_id in enumerate(txt_loader.dataset.captions):
                 caption = txt_loader.dataset.captions[txt_id]
@@ -675,7 +627,7 @@ def get_images2concept_attack(opt, config):
         for each in benign_vis_index:
             benign_vis_id = vis_loader.dataset.vis_ids[each]
             benign_vis_ids.append(benign_vis_id)
-            temp = vis_loader.dataset.ImageDataset._get_imagePreTensor_from_videoid_with_clip(benign_vis_id)[1]  # 未归一化的原始图片
+            temp = vis_loader.dataset.ImageDataset._get_imagePreTensor_from_videoid_with_clip(benign_vis_id)[1] 
             benign_vis_tensors = temp if benign_vis_tensors is None else \
                 torch.cat((benign_vis_tensors, temp), dim=0)
         
@@ -718,38 +670,8 @@ def get_images2concept_attack(opt, config):
                 (eval_output_dict['video_all_embs'], eval_output_dict['adversarial_embs'], eval_output_dict['vis_all_ids'],
                     eval_output_dict['target_txt_ids'], eval_output_dict['target_txt_embs'],
                     )
-            # draw_tsne_text_and_vis(txt_loader, adversarial_embs, target_caption_features, target_concept, model, output_dir)
-            # continue
-            # ***************************************************************************
-            # 画出攻击后图片的样子
-            # benign_image = transforms.ToPILImage()(benign_vis_tensors[0]).convert('RGB')
-            # one_target_image = list(target_caption_dict.keys())[0].split('#')[0]
-            # one_target_image = vis_loader.dataset.ImageDataset._get_imagePreTensor_from_videoid_with_clip(one_target_image)[1]
-            # one_target_image = transforms.ToPILImage()(one_target_image[0]).convert('RGB')
-            #
-            # fig, ax = plt.subplots(3, 2, dpi=300, figsize=(14, 7))
-            # for i, each_image in enumerate([benign_image, one_target_image]):
-            #     ax[0, i].imshow(each_image)
-            # for i, each_image in enumerate(adversarial_tensors[0:4]):
-            #     i = i+2
-            #     adversarial_image = transforms.ToPILImage()(each_image).convert('RGB')
-            #     print((i//2, i%2))
-            #     ax[i//2, i%2].imshow(adversarial_image)
-            #
-            # ax[0,0].set_xlabel("benign_image")
-            # ax[0,1].set_xlabel("one target_image \n target_concept: %s" % target_concept)
-            # ax[1,0].set_xlabel("adversarial_image")
-            #
-            # fig.suptitle(result_str+'\n target_concept: %s' % target_concept)
-            # plt.show()
-            # adversarial_image.save('/data/hf/VisualSearch/flickr30k/test_%s.jpg' % target_concept)
-            # # plt.savefig('/data/hf/VisualSearch/msrvtt10k/Frame_weights_plot/%s_%d_cam.jpg' % (video_id, caption_index))
-            # plt.close()
 
             # ***************************************************************************
-
-            # 画出攻击前后，adv-t-mAP 最大的两组 query 前10张检索结果
-            # 首先找到攻击后 adv-t-mAP 最大的两个结果
             adv_mAP_list = []
             adv_video_all_embs = torch.cat((video_all_embs.cpu(), adversarial_embs.cpu()), dim=0)
             adv_vis_all_ids = vis_all_ids + ["adversarialVideo#%d" % each for each in range(len(adversarial_embs))]
@@ -759,15 +681,14 @@ def get_images2concept_attack(opt, config):
             for txt_index in range(len(adv_target_txt_ids)):
                 adv_mAP_list.append(get_eval_from_matrix(adv_sim_matrix[[txt_index]], adv_vis_all_ids,
                                         [adv_target_txt_ids[txt_index]], t2multi_v=True)['eval_tuple'][1])
-            mAP_inds = np.argsort(adv_mAP_list)[::-1]  # 前两个即为最大 mAP 的 txt_index
+            mAP_inds = np.argsort(adv_mAP_list)[::-1] 
             inds = np.argsort(adv_sim_matrix, axis=1)[:, ::-1]
 
 
-            # 画出攻击前后 adv-t-mAP 最大的两组 query 前10张检索结果
             top = 10
             fig, ax = plt.subplots(2*top, 10, dpi=300)
             vis_tensors = [[] for each in range(top*2)]
-            for i_, each in enumerate(inds[mAP_inds[0:top]]):  # visual 排序
+            for i_, each in enumerate(inds[mAP_inds[0:top]]):
                 for j, each_index in enumerate(each):
                     vis_id_ = adv_vis_all_ids[each_index]
                     if 'adversarialVideo' in vis_id_:
@@ -775,11 +696,11 @@ def get_images2concept_attack(opt, config):
                         continue
                     temp = \
                     vis_loader.dataset.ImageDataset._get_imagePreTensor_from_videoid_with_clip(
-                        vis_id_)[1][0].numpy()  # 未归一化的原始图片
+                        vis_id_)[1][0].numpy()  
                     vis_tensors[i_].append(temp)
                     if len(vis_tensors[i_]) == 10:
                         break
-            for i_, each in enumerate(inds[mAP_inds[0:top]]):  # visual 排序
+            for i_, each in enumerate(inds[mAP_inds[0:top]]):
                 i_ += top
                 # print("second", i_)
                 for each_index in each:
@@ -787,11 +708,11 @@ def get_images2concept_attack(opt, config):
                     if 'adversarialVideo' in vis_id_:
                         vis_index = int(vis_id_.split("#")[-1])
                         # vis_id_ = "ad%s.jpg" % vis_index
-                        temp = adversarial_tensors[vis_index].numpy()  # 未归一化的原始图片
+                        temp = adversarial_tensors[vis_index].numpy() 
                     else:
                         temp = \
                             vis_loader.dataset.ImageDataset._get_imagePreTensor_from_videoid_with_clip(
-                                vis_id_)[1][0].numpy()  # 未归一化的原始图片
+                                vis_id_)[1][0].numpy() 
                     vis_tensors[i_].append(temp)
                     if len(vis_tensors[i_]) == 10:
                         break
