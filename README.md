@@ -1,8 +1,6 @@
-# Random Reconstruction defense on text-based Image Retrieval
+# PAIR defense on text-based Image Retrieval
 
-TTH paper: Targeted Trojan-Horse Attacks on Language-based Image Retrieval.
-
-Our defense paper: Towards Defending against Adversarial Patches via Random Reconstruction.
+Our defense paper: PAIR: Pre-denosing Augmented Image Retrieval Model for Defending Adversarial Patches
 
 ## Environment
 
@@ -20,14 +18,14 @@ pip install -r requirements.txt
 
 ### Dataset
 
-TTH put the dataset files on `~/VisualSearch`.
+Put the dataset files on `~/VisualSearch`.
 
 ```sh
 mkdir ~/VisualSearch
 unzip -q "TTH_VisualSearch.zip" -d "${HOME}/VisualSearch/"
 ```
 
-Readers need to download Flickr30k dataset and move the image files to `~/VisualSearch/flickr30k/flickr30k-images/`. The Flickr30k is provided by the TTH's Authors: http://shannon.cs.illinois.edu/DenotationGraph/ or Baidu Yun (https://pan.baidu.com/s/1r0RVUwctJsI0iNuVXHQ6kA  提取码：hrf3).
+Readers need to download Flickr30k dataset and move the image files to `~/VisualSearch/flickr30k/flickr30k-images/`.
 
 Download the pretrained model. 
 
@@ -53,7 +51,7 @@ python -u test_defense_model_on_clean.py
 
 
 
-## TTH attack
+## Pacth attack
 
 
 ```sh
@@ -64,7 +62,7 @@ python -u test_defense_model_on_clean.py
  --batch_size 256 --query_sets flickr30ktest_add_ad.caption.txt
 ```
 
-## TTH attack with our defense
+## Patch attack with our defense
 
 You can select the keyword: jacket dress floor female motorcycle policeman cow waiter swimming reading run dancing floating smiling climbing feeding front little green yellow pink navy maroon.
 
