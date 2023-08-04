@@ -57,13 +57,6 @@ class MarginRankingLoss(nn.Module):
     """
     def __init__(self, margin=0, measure='cosine', max_violation=False,
                  cost_style='sum', direction='bidir', device=torch.device('cpu')):
-        """
-        :param margin:
-        :param measure: cosine 余弦相似度， hist_sim 扩展 jaccard 相似度
-        :param max_violation:
-        :param cost_style: 把所有误差相加 sum，还是取平均值 mean
-        :param direction: compare every diagonal score to scores in its column and row
-        """
         super(MarginRankingLoss, self).__init__()
         self.margin = margin
         self.cost_style = cost_style
@@ -82,7 +75,7 @@ class MarginRankingLoss(nn.Module):
         # compute image-sentence score matrix
         scores = self.sim(im, s)  #
         diagonal = scores.diag().view(im.size(0), 1)
-        d1 = diagonal.expand_as(scores)  # 扩展维度
+        d1 = diagonal.expand_as(scores) 
         d2 = diagonal.t().expand_as(scores)
 
         # clear diagonals
@@ -91,10 +84,9 @@ class MarginRankingLoss(nn.Module):
 
         cost_s = None
         cost_im = None
-        # compare every diagonal score to scores in its column
         if self.direction in ['i2t', 'bidir']:
             # caption retrieval
-            cost_s = (self.margin + scores - d1).clamp(min=0)  # clamp 最大最小裁剪
+            cost_s = (self.margin + scores - d1).clamp(min=0) 
             cost_s = cost_s.masked_fill_(I, 0)
         # compare every diagonal score to scores in its row
         if self.direction in ['t2i', 'bidir']:
