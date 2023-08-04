@@ -15,12 +15,6 @@ logging.basicConfig(
 
 
 def checkToSkip(filename, overwrite):
-    """
-    如果文件存在，是否进行覆盖
-    :param filename:
-    :param overwrite:
-    :return:
-    """
     if os.path.exists(filename):
         if overwrite:
             logging.info('%s exists. overwrite', filename)
