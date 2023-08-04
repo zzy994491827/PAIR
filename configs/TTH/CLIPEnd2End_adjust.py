@@ -20,18 +20,13 @@ class config(BaseConfig.config):
         'NetVLAD_encoding': {'name': 'noNetVLAD'},  # [noNetVLAD, NetVLAD]
     }
     vid_feats = []
-#
 
     float16 = True
-    # end2end 学习，输入 frame/video 原始文件
     frame_loader = True
-    # if text_encoding includes CLIP
     clip_opt = {
         'size': 512, 'transform_batch_norm': True, 'transform_dropout': 0.0,
         'transform_activation': 'tanh', 'frozen': False,
     }
-    # ********************************萌萌哒分界线******************
-    # Attack
     attack_scales = [1024]  #  "[1024], [300,400,500,600,700,800,900,1024], [300,350,400,450,500,550,600,650,700,750,800,850,900,950,1024]
     attack_iters = 300
     attack_lr = 0.01
