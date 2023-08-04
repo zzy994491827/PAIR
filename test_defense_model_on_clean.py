@@ -143,7 +143,6 @@ def data_write_csv(file_name, datas):
         writer = csv.writer(f, delimiter='\t')
         for data in datas:
             writer.writerow(data)
-        print("保存文件成功，处理结束")
 
 
 def test(mae_model,model, preprocess,test_caption_txt,image_root):
@@ -276,7 +275,6 @@ class GaussianSmoothing(nn.Module):
         res2=math.exp(-(x*x+y*y)/(2*self.sigema*self.sigema))
         return res1*res2
  
-    #滤波模板
     def template(self):
         sideLength=int(self.radius*2+1)
 
