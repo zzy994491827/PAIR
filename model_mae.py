@@ -13,7 +13,7 @@ from functools import partial
 
 import torch
 import torch.nn as nn
-
+import pytorch_ssim
 from timm.models.vision_transformer import PatchEmbed, Block
 
 #from util.pos_embed import get_2d_sincos_pos_embed
@@ -404,15 +404,8 @@ class MaskedAutoencoderViT(nn.Module):
             mean = target.mean(dim=-1, keepdim=True)
             var = target.var(dim=-1, keepdim=True)
             target = (target - mean) / (var + 1.e-6)**.5
-
-        loss = (pred - target) ** 2
-        loss = loss.mean(dim=-1)  # [N, L], mean loss per patch
-
-        loss = (loss * mask).sum() / mask.sum()  # mean loss on removed patches
-        """
-        target = self.patchify(imgs)
-        loss,_,_=sinkhorn(pred,target)
-        """
+        ssim_loss = pytorch_ssim.SSIM()
+        loss = -ssim_loss(pred, target) 
         return loss
 
     def forward(self, imgs, mask_index):
